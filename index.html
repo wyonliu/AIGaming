@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIGaming Racing</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <div id="timer" style="position: absolute; top: 10px; left: 10px; color: white;"></div>
+    <canvas id="gameCanvas"></canvas>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./node_modules/three/build/three.module.js",
+                "cannon-es": "./node_modules/cannon-es/dist/cannon-es.js"
+            }
+        }
+    </script>
+    <script type="module" src="game.js"></script>
+</body>
+</html> 
