@@ -1,6 +1,12 @@
 // Import necessary libraries
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import GameState from './gameState.js';
+import NetworkManager from './network.js';
+
+// Initialize game state and network manager
+const gameState = new GameState();
+const networkManager = new NetworkManager(gameState);
 
 // Game state
 let gameStarted = false;
@@ -97,6 +103,9 @@ const trackObjects = {
     boundaries: [],
     barriers: []
 };
+
+// Global reference to the menu container
+let menuContainer;
 
 // Functions to create tracks
 function createStraightTrack() {
@@ -382,6 +391,9 @@ function resetGame() {
     finalTime = null;
     document.getElementById('timer').innerText = `Time: 0.00s`;
     
+    // Reset game state for multiplayer readiness
+    gameState.resetRace();
+    
     // Remove finish notification if exists
     if (finishNotification) {
         document.body.removeChild(finishNotification);
@@ -389,6 +401,12 @@ function resetGame() {
     }
     
     clearTimeout(autoResetTimeout);
+    
+    // In multiplayer, notify server of race reset
+    if (networkManager.isMultiplayer) {
+        // This will be implemented in MVP3
+        console.log("Would notify server of race reset in multiplayer mode");
+    }
 }
 
 // Race timer variables
@@ -421,7 +439,7 @@ document.body.appendChild(brakeIndicator);
 
 // Create the menu system
 function createMenu() {
-    const menuContainer = document.createElement('div');
+    menuContainer = document.createElement('div');
     menuContainer.id = 'menu-container';
     menuContainer.style.position = 'absolute';
     menuContainer.style.top = '50%';
@@ -477,7 +495,6 @@ function createMenu() {
         // On click event
         trackBox.addEventListener('click', () => {
             startGame(trackKey);
-            document.body.removeChild(menuContainer);
         });
         
         // Hover effect
@@ -546,9 +563,17 @@ function startGame(trackKey) {
     currentTrack = trackKey;
     gameStarted = true;
     
+    // Remove menu if it exists
+    if (menuContainer && menuContainer.parentNode) {
+        menuContainer.parentNode.removeChild(menuContainer);
+    }
+    
     // Show in-game UI
     document.getElementById('timer').style.display = 'block';
     debugInfo.style.display = 'block';
+    
+    // Clear any existing track before creating a new one
+    clearTrack();
     
     // Create the selected track
     tracks[trackKey].create();
@@ -584,12 +609,16 @@ function animate() {
     if ((moveForward || moveBackward) && !raceStarted) {
         startTime = Date.now();
         raceStarted = true;
+        // Update game state
+        gameState.startRace();
     }
     
     // Update timer
     if (raceStarted && finalTime === null) {
         const elapsed = (Date.now() - startTime) / 1000; // Seconds
         document.getElementById('timer').innerText = `Time: ${elapsed.toFixed(2)}s`;
+        // Update race time in game state
+        gameState.updateRaceTime();
     }
     
     // Check if car has crossed the finish line
@@ -683,7 +712,8 @@ function animate() {
     
     // Handle finish line crossing
     if (finishCrossed) {
-        finalTime = (Date.now() - startTime) / 1000;
+        // Use game state to record finish
+        finalTime = gameState.finishRace();
         
         // Create finish notification
         finishNotification = document.createElement('div');
@@ -707,6 +737,13 @@ function animate() {
         autoResetTimeout = setTimeout(() => {
             resetGame();
         }, 3000);
+    
+        // In multiplayer, we would notify the server here
+        if (networkManager.isMultiplayer) {
+            // This will be implemented in MVP3
+            console.log("Would send race finish data to server in multiplayer mode");
+            // networkManager.sendRaceFinish(finalTime);
+        }
     }
     
     // Reset car if R key is pressed
@@ -904,6 +941,19 @@ function animate() {
     
     // Render the scene
     renderer.render(scene, camera);
+
+    // Update physics world
+    world.step(timeStep);
+    
+    // Update game state from physics
+    if (carBody) {
+        gameState.updateFromPhysics(carBody);
+    }
+    
+    // For future multiplayer functionality - send updates to server
+    if (networkManager.isMultiplayer) {
+        networkManager.sendPlayerState();
+    }
 }
 
 // Show the menu on game start
