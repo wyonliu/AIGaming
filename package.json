@@ -1,0 +1,24 @@
+{
+  "name": "aigaming",
+  "version": "1.0.0",
+  "description": "AIGamingToturial",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/David-Sola/AIGaming.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/David-Sola/AIGaming/issues"
+  },
+  "homepage": "https://newaiworld.com/",
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "three": "^0.174.0"
+  }
+}
